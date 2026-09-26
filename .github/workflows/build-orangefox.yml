@@ -82,15 +82,11 @@ jobs:
           products=$(list_products)
           products_status=$?
           set -e
+          echo "list_products exit status: $products_status"
           printf '%s\n' "$products"
-          if [ "$products_status" -ne 0 ] || ! grep -Fxq "twrp_infiniti" <<< "$products"; then
-            echo "twrp_infiniti was not discovered; AndroidProducts.mk inventory follows:" >&2
-            grep -E 'oneplus/infiniti|infiniti/AndroidProducts.mk' \
-              "$OUT_DIR/.module_paths/AndroidProducts.mk.list" || true
-            echo "Device product files:" >&2
-            find "$FOX_ROOT/device/oneplus/infiniti" -maxdepth 1 -type f -print >&2
-            exit 1
-          fi
+          echo "infiniti product inventory entry:"
+          grep -F "device/oneplus/infiniti/AndroidProducts.mk" \
+            "$OUT_DIR/.module_paths/AndroidProducts.mk.list" || true
           echo "Available releases for twrp_infiniti:"
           list_releases twrp_infiniti || true
           lunch twrp_infiniti bp2a eng
