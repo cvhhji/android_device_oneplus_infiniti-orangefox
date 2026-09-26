@@ -74,7 +74,9 @@ jobs:
             exit 1
           fi
           mkdir -p "$RUNNER_TEMP/orangefox-infiniti-artifact"
-          cp "$recovery_image" \
+          bash "$GITHUB_WORKSPACE/tools/transplant_avb.sh" \
+            "$GITHUB_WORKSPACE/avb/recovery-vbmeta.bin" \
+            "$recovery_image" \
             "$RUNNER_TEMP/orangefox-infiniti-artifact/OrangeFox-infiniti-Android17-recovery.img"
           stat "$RUNNER_TEMP/orangefox-infiniti-artifact/OrangeFox-infiniti-Android17-recovery.img"
           sha256sum "$RUNNER_TEMP/orangefox-infiniti-artifact/OrangeFox-infiniti-Android17-recovery.img" \

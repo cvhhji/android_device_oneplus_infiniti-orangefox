@@ -12,6 +12,8 @@ The splash defaults are Google Dark (`#202124`), the dark OrangeFox logo, and th
 
 ## AVB note
 
-The supplied shell script copies a vbmeta block and checks only the `AVB0`/`AVBf` magic. It does not verify the descriptor digest against the recovery image. In the supplied `recovery_fox.img`, the signed recovery descriptor digest does not match the image payload, so carrying that block into new builds cannot establish that a locked bootloader will accept them. The Actions artifact is the built recovery image; it is not re-signed with OnePlus's private key.
+The workflow reuses the 2,240-byte vbmeta block extracted from the supplied `recovery_fox.img`, then applies it to each new image with `tools/transplant_avb.sh`. This automates the fake-relock procedure you confirmed on the device. If the official recovery's AVB data changes after an OTA, replace `avb/recovery-vbmeta.bin` with the block from the new working image.
+
+This reuses the existing signed block; it does not create a new OnePlus signature or recalculate its recovery descriptor. AOSP AVB descriptors bind vbmeta metadata to image data, so the resulting artifact should be understood as the tested fake-relock output, not as a newly OEM-signed image. See the [AVB hash descriptor definition](https://android.googlesource.com/platform/external/avb/+/refs/heads/main/libavb/avb_hash_descriptor.h).
 
 Successful compilation does not confirm boot, decryption, or touch behavior on the Android 17 device. Those require a recovery boot and on-device checks.
