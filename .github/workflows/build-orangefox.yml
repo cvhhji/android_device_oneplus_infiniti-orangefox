@@ -63,6 +63,20 @@ jobs:
           export ALLOW_MISSING_DEPENDENCIES=true
           export OUT_DIR="$FOX_OUT"
           source build/envsetup.sh
+          export OUT_DIR="$FOX_ROOT/out"
+          mkdir -p "$OUT_DIR/.module_paths"
+          {
+            for tree in device vendor product; do
+              if [ -d "$tree" ]; then
+                find "$tree" -type f -name AndroidProducts.mk -print
+              fi
+            done
+          } | sort -u > "$OUT_DIR/.module_paths/AndroidProducts.mk.list"
+          if ! grep -Fqx "device/oneplus/infiniti/AndroidProducts.mk" \
+            "$OUT_DIR/.module_paths/AndroidProducts.mk.list"; then
+            echo "infiniti AndroidProducts.mk was not added to the product inventory" >&2
+            exit 1
+          fi
           echo "Available products:"
           set +e
           products=$(list_products)
@@ -72,7 +86,7 @@ jobs:
           if [ "$products_status" -ne 0 ] || ! grep -Fxq "twrp_infiniti" <<< "$products"; then
             echo "twrp_infiniti was not discovered; AndroidProducts.mk inventory follows:" >&2
             grep -E 'oneplus/infiniti|infiniti/AndroidProducts.mk' \
-              "$FOX_OUT/.module_paths/AndroidProducts.mk.list" || true
+              "$OUT_DIR/.module_paths/AndroidProducts.mk.list" || true
             echo "Device product files:" >&2
             find "$FOX_ROOT/device/oneplus/infiniti" -maxdepth 1 -type f -print >&2
             exit 1
