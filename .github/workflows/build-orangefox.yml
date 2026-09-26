@@ -63,7 +63,11 @@ jobs:
           export ALLOW_MISSING_DEPENDENCIES=true
           export OUT_DIR="$FOX_OUT"
           source build/envsetup.sh
-          lunch twrp_infiniti-bp2a-eng
+          echo "Available products:"
+          list_products || true
+          echo "Available releases for twrp_infiniti:"
+          list_releases twrp_infiniti || true
+          lunch twrp_infiniti bp2a eng
           mka adbd recoveryimage
 
       - name: Stage recovery artifact
