@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Set device-specific defaults in the OrangeFox fox_16.0 splash UI."""
+"""Set device-specific splash and timezone defaults in OrangeFox fox_16.0."""
 
 from pathlib import Path
 import sys
@@ -135,6 +135,30 @@ def patch_customization(path: Path) -> None:
     path.write_text(text, encoding="utf-8", newline="\n")
 
 
+def patch_timezone(recovery: Path) -> None:
+    data_cpp = recovery / "data.cpp"
+    text = data_cpp.read_text(encoding="utf-8")
+    text = replace_count(
+        text,
+        'mPersist.SetValue(TW_TIME_ZONE_GUIDST, "1");',
+        'mPersist.SetValue(TW_TIME_ZONE_GUIDST, "0");',
+        1,
+        "default daylight-saving setting",
+    )
+    data_cpp.write_text(text, encoding="utf-8", newline="\n")
+
+    settings = recovery / "gui/theme/portrait_hdpi/pages/settings.xml"
+    text = settings.read_text(encoding="utf-8")
+    text = replace_count(
+        text,
+        '<listitem name="{@utcp8}">TAIST-8;TAIDT</listitem>',
+        '<listitem name="{@utcp8}">TAIST-8;</listitem>',
+        1,
+        "UTC+8 daylight-saving rule",
+    )
+    settings.write_text(text, encoding="utf-8", newline="\n")
+
+
 def main() -> None:
     if len(sys.argv) != 2:
         raise SystemExit(f"Usage: {sys.argv[0]} <bootable/recovery directory>")
@@ -147,7 +171,11 @@ def main() -> None:
 
     patch_splash(splash)
     patch_customization(customization)
-    print("Applied Google Dark splash, dark logo, and unchecked title defaults.")
+    patch_timezone(recovery)
+    print(
+        "Applied Google Dark splash, dark logo, unchecked title defaults, "
+        "and DST-safe UTC+8 defaults."
+    )
 
 
 if __name__ == "__main__":

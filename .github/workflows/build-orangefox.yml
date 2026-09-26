@@ -14,7 +14,7 @@ jobs:
     timeout-minutes: 360
     env:
       FOX_ROOT: /home/runner/android/fox_16.0
-      FOX_OUT: /home/runner/android/fox_16.0/BUILDS/infiniti
+      FOX_OUT: /home/runner/android/fox_16.0/out
 
     steps:
       - name: Check out device tree
@@ -45,7 +45,7 @@ jobs:
           cd "$RUNNER_TEMP/orangefox-sync"
           "$RUNNER_TEMP/orangefox-sync/orangefox_sync.sh" --branch 16.0 --path "$FOX_ROOT"
 
-      - name: Overlay device tree and set splash defaults
+      - name: Overlay device tree and patch recovery defaults
         run: |
           mkdir -p "$FOX_ROOT/device/oneplus/infiniti"
           rsync -a --delete --exclude='.git/' --exclude='.github/' \
@@ -64,7 +64,19 @@ jobs:
           export OUT_DIR="$FOX_OUT"
           source build/envsetup.sh
           echo "Available products:"
-          list_products || true
+          set +e
+          products=$(list_products)
+          products_status=$?
+          set -e
+          printf '%s\n' "$products"
+          if [ "$products_status" -ne 0 ] || ! grep -Fxq "twrp_infiniti" <<< "$products"; then
+            echo "twrp_infiniti was not discovered; AndroidProducts.mk inventory follows:" >&2
+            grep -E 'oneplus/infiniti|infiniti/AndroidProducts.mk' \
+              "$FOX_OUT/.module_paths/AndroidProducts.mk.list" || true
+            echo "Device product files:" >&2
+            find "$FOX_ROOT/device/oneplus/infiniti" -maxdepth 1 -type f -print >&2
+            exit 1
+          fi
           echo "Available releases for twrp_infiniti:"
           list_releases twrp_infiniti || true
           lunch twrp_infiniti bp2a eng
