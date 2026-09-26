@@ -12,6 +12,6 @@ PRODUCT_MAKEFILES := \
     $(LOCAL_DIR)/twrp_infiniti.mk
 
 COMMON_LUNCH_CHOICES := \
-    twrp_infiniti-bp2a-user \
-    twrp_infiniti-bp2a-userdebug \
-    twrp_infiniti-bp2a-eng
+    twrp_infiniti-user \
+    twrp_infiniti-userdebug \
+    twrp_infiniti-eng
