@@ -123,7 +123,7 @@ def patch_customization(path: Path) -> None:
         '\t\t\t\t<action function="set">spl_bg_on=0</action>\n'
         '\t\t\t\t<action function="set">spl_ofr=0</action>\n'
     )
-    text = replace_count(text, info_old, info_new, 2, "splash initial defaults")
+    text = replace_count(text, info_old, info_new, 1, "splash initial defaults")
     text = replace_count(
         text,
         'spl_bg_color=#1E1F22',
