@@ -1,0 +1,89 @@
+name: Build OrangeFox infiniti
+
+on:
+  push:
+    branches:
+      - fox_16.0
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    env:
+      FOX_ROOT: /home/runner/android/fox_16.0
+      FOX_OUT: /home/runner/android/fox_16.0/BUILDS/infiniti
+
+    steps:
+      - name: Check out device tree
+        uses: actions/checkout@v7
+
+      - name: Free runner disk space
+        run: |
+          sudo rm -rf /usr/local/lib/android/sdk /usr/share/dotnet /opt/ghc /usr/local/share/boost /usr/share/swift
+          df -h /
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            bc bison build-essential ccache curl flex g++-multilib gcc-multilib \
+            git git-lfs gnupg gperf imagemagick lib32ncurses-dev lib32readline-dev \
+            lib32z1-dev libelf-dev libgl1-mesa-dev libncurses-dev libssl-dev \
+            libxml2 libxml2-utils lz4 lzop openjdk-17-jdk pngcrush python3 \
+            python-is-python3 rsync schedtool squashfs-tools unzip xsltproc zip zlib1g-dev
+
+      - name: Install Repo and sync OrangeFox sources
+        run: |
+          mkdir -p "$HOME/bin" "$(dirname "$FOX_ROOT")"
+          curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo -o "$HOME/bin/repo"
+          chmod a+x "$HOME/bin/repo"
+          export PATH="$HOME/bin:$PATH"
+          git clone --depth=1 https://github.com/OrangeFox16/sync.git "$RUNNER_TEMP/orangefox-sync"
+          cd "$RUNNER_TEMP/orangefox-sync"
+          "$RUNNER_TEMP/orangefox-sync/orangefox_sync.sh" --branch 16.0 --path "$FOX_ROOT"
+
+      - name: Overlay device tree and set splash defaults
+        run: |
+          mkdir -p "$FOX_ROOT/device/oneplus/infiniti"
+          rsync -a --delete --exclude='.git/' --exclude='.github/' \
+            "$GITHUB_WORKSPACE/" "$FOX_ROOT/device/oneplus/infiniti/"
+          python3 "$GITHUB_WORKSPACE/tools/patch_orangefox_splash.py" \
+            "$FOX_ROOT/bootable/recovery"
+
+      - name: Build recovery image
+        run: |
+          cd "$FOX_ROOT"
+          export PATH="$HOME/bin:$PATH"
+          export FOX_VERSION=R11.3_fox_16.0
+          export FOX_BUILD_TYPE=Alpha
+          export FOX_BUILD_DEVICE=infiniti
+          export ALLOW_MISSING_DEPENDENCIES=true
+          export OUT_DIR="$FOX_OUT"
+          source build/envsetup.sh
+          lunch twrp_infiniti-eng
+          mka adbd recoveryimage
+
+      - name: Stage recovery artifact
+        run: |
+          recovery_image=$(find "$FOX_OUT" -type f -name recovery.img -print -quit)
+          if [ -z "$recovery_image" ]; then
+            echo "recovery.img was not produced under $FOX_OUT" >&2
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/orangefox-infiniti-artifact"
+          cp "$recovery_image" \
+            "$RUNNER_TEMP/orangefox-infiniti-artifact/OrangeFox-infiniti-Android17-recovery.img"
+          stat "$RUNNER_TEMP/orangefox-infiniti-artifact/OrangeFox-infiniti-Android17-recovery.img"
+          sha256sum "$RUNNER_TEMP/orangefox-infiniti-artifact/OrangeFox-infiniti-Android17-recovery.img" \
+            > "$RUNNER_TEMP/orangefox-infiniti-artifact/SHA256SUMS"
+
+      - name: Upload recovery image
+        uses: actions/upload-artifact@v7
+        with:
+          name: OrangeFox-infiniti-Android17-${{ github.sha }}
+          path: ${{ runner.temp }}/orangefox-infiniti-artifact/
+          if-no-files-found: error
+          retention-days: 14
