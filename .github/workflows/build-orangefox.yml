@@ -67,7 +67,7 @@ jobs:
         run: |
           cd "$FOX_ROOT"
           export PATH="$HOME/bin:$PATH"
-          export FOX_VERSION=R11.3_fox_16.0
+          export FOX_MAINTAINER_PATCH_VERSION=1
           export FOX_BUILD_TYPE=Alpha
           export FOX_BUILD_DEVICE=infiniti
           export ALLOW_MISSING_DEPENDENCIES=true
