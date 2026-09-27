@@ -141,7 +141,18 @@ jobs:
             done < <(find "$OUT_DIR" -maxdepth 4 -type f -iname '*.log' -print0)
             exit "$lunch_status"
           fi
-          mka adbd recoveryimage
+          mka adbd recoveryimage &
+          build_pid=$!
+          while kill -0 "$build_pid" 2>/dev/null; do
+            sleep 60
+            if kill -0 "$build_pid" 2>/dev/null; then
+              echo "Recovery build is still active at $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+              ps -eo pid,ppid,stat,etime,%cpu,%mem,rss,args --sort=-%cpu | head -n 12
+              free -h
+              df -h "$FOX_ROOT"
+            fi
+          done
+          wait "$build_pid"
 
       - name: Stage recovery artifact
         run: |
