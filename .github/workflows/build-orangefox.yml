@@ -53,6 +53,16 @@ jobs:
           python3 "$GITHUB_WORKSPACE/tools/patch_orangefox_splash.py" \
             "$FOX_ROOT/bootable/recovery"
 
+      - name: Add temporary swap space for Soong
+        run: |
+          sudo fallocate -l 8G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -h
+          swapon --show
+          df -h /
+
       - name: Build recovery image
         run: |
           cd "$FOX_ROOT"
@@ -147,12 +157,18 @@ jobs:
             sleep 60
             if kill -0 "$build_pid" 2>/dev/null; then
               echo "Recovery build is still active at $(date -u '+%Y-%m-%dT%H:%M:%SZ')"
-              ps -eo pid,ppid,stat,etime,%cpu,%mem,rss,args --sort=-%cpu | head -n 12
+              ps -eo pid,ppid,stat,etime,%cpu,%mem,rss,comm --sort=-%cpu | head -n 12
               free -h
               df -h "$FOX_ROOT"
             fi
           done
           wait "$build_pid"
+
+      - name: Remove temporary swap space
+        if: success()
+        run: |
+          sudo swapoff /swapfile
+          sudo rm /swapfile
 
       - name: Stage recovery artifact
         run: |
