@@ -68,6 +68,11 @@ jobs:
           python3 "$GITHUB_WORKSPACE/tools/patch_recovery_fscrypt_headers.py" \
             "$FOX_ROOT"
 
+      - name: Default optional OZIP key when unset
+        run: |
+          python3 "$GITHUB_WORKSPACE/tools/patch_optional_ozip_key.py" \
+            "$FOX_ROOT/bootable/recovery/gui/action.cpp"
+
       - name: Add temporary swap space for Soong
         run: |
           sudo fallocate -l 8G /swapfile-extra
