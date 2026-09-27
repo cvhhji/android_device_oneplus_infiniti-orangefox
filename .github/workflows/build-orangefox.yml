@@ -58,6 +58,11 @@ jobs:
           python3 "$GITHUB_WORKSPACE/tools/patch_minuitwrp.py" \
             "$FOX_ROOT/bootable/recovery/minuitwrp/graphics_fbdev.cpp"
 
+      - name: Patch update_engine SnapshotManager API for Android 17
+        run: |
+          python3 "$GITHUB_WORKSPACE/tools/patch_update_engine_snapshot_api.py" \
+            "$FOX_ROOT/system/update_engine/aosp/dynamic_partition_control_android.cc"
+
       - name: Add temporary swap space for Soong
         run: |
           sudo fallocate -l 8G /swapfile-extra
