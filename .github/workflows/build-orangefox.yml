@@ -73,6 +73,11 @@ jobs:
           python3 "$GITHUB_WORKSPACE/tools/patch_optional_ozip_key.py" \
             "$FOX_ROOT/bootable/recovery/gui/action.cpp"
 
+      - name: Align OrangeFox with the keystore sync API
+        run: |
+          python3 "$GITHUB_WORKSPACE/tools/patch_recovery_keystore_sync.py" \
+            "$FOX_ROOT"
+
       - name: Add temporary swap space for Soong
         run: |
           sudo fallocate -l 8G /swapfile-extra
