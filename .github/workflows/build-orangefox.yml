@@ -62,6 +62,14 @@ jobs:
           export FOX_BUILD_DEVICE=infiniti
           export ALLOW_MISSING_DEPENDENCIES=true
           export OUT_DIR="$FOX_ROOT/out"
+          allowlist_file=vendor/google/build/androidmk/allowlist.txt
+          mkdir -p "$(dirname "$allowlist_file")"
+          touch "$allowlist_file"
+          if ! grep -Fqx "external/magisk-prebuilt/Android.mk" "$allowlist_file"; then
+            printf '%s\n' "external/magisk-prebuilt/Android.mk" >> "$allowlist_file"
+          fi
+          echo "Soong Android.mk allowlist entry:"
+          grep -F "external/magisk-prebuilt/Android.mk" "$allowlist_file"
           mkdir -p "$OUT_DIR/.module_paths"
           {
             for tree in device vendor product; do
@@ -91,9 +99,9 @@ jobs:
           cat "$RUNNER_TEMP/infiniti-product-probe.log"
           echo "Direct product parser exit status: $product_probe_status"
           if [ "$product_probe_status" -ne 0 ]; then
-            echo "AOSP control parser probe for aosp_arm64/bp2a/eng:"
+            echo "AOSP control parser probe for aosp_arm64/trunk_staging/eng:"
             set +e
-            TARGET_PRODUCT=aosp_arm64 TARGET_RELEASE=bp2a TARGET_BUILD_VARIANT=eng \
+            TARGET_PRODUCT=aosp_arm64 TARGET_RELEASE=trunk_staging TARGET_BUILD_VARIANT=eng \
               build/soong/soong_ui.bash --dumpvar-mode TARGET_DEVICE \
               > "$RUNNER_TEMP/aosp-product-probe.log" 2>&1
             aosp_probe_status=$?
@@ -120,7 +128,19 @@ jobs:
           list_releases twrp_infiniti || true
           echo "Available releases for aosp_arm64:"
           list_releases aosp_arm64 || true
+          set +e
           lunch twrp_infiniti bp2a eng
+          lunch_status=$?
+          set -e
+          if [ "$lunch_status" -ne 0 ]; then
+            echo "lunch failed with status: $lunch_status"
+            echo "Generated build logs after lunch failure:"
+            while IFS= read -r -d '' log_file; do
+              echo "--- $log_file ---"
+              tail -n 120 "$log_file"
+            done < <(find "$OUT_DIR" -maxdepth 4 -type f -iname '*.log' -print0)
+            exit "$lunch_status"
+          fi
           mka adbd recoveryimage
 
       - name: Stage recovery artifact
