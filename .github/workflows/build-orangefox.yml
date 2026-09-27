@@ -55,10 +55,10 @@ jobs:
 
       - name: Add temporary swap space for Soong
         run: |
-          sudo fallocate -l 8G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
+          sudo fallocate -l 8G /swapfile-extra
+          sudo chmod 600 /swapfile-extra
+          sudo mkswap /swapfile-extra
+          sudo swapon /swapfile-extra
           free -h
           swapon --show
           df -h /
@@ -167,8 +167,8 @@ jobs:
       - name: Remove temporary swap space
         if: success()
         run: |
-          sudo swapoff /swapfile
-          sudo rm /swapfile
+          sudo swapoff /swapfile-extra
+          sudo rm /swapfile-extra
 
       - name: Stage recovery artifact
         run: |
