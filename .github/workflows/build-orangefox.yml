@@ -84,10 +84,28 @@ jobs:
           echo "Direct product parser probe for twrp_infiniti/bp2a/eng:"
           set +e
           TARGET_PRODUCT=twrp_infiniti TARGET_RELEASE=bp2a TARGET_BUILD_VARIANT=eng \
-            build/soong/soong_ui.bash --dumpvar-mode TARGET_DEVICE
+            build/soong/soong_ui.bash --dumpvar-mode TARGET_DEVICE \
+            > "$RUNNER_TEMP/infiniti-product-probe.log" 2>&1
           product_probe_status=$?
           set -e
+          cat "$RUNNER_TEMP/infiniti-product-probe.log"
           echo "Direct product parser exit status: $product_probe_status"
+          if [ "$product_probe_status" -ne 0 ]; then
+            echo "AOSP control parser probe for aosp_arm64/bp2a/eng:"
+            set +e
+            TARGET_PRODUCT=aosp_arm64 TARGET_RELEASE=bp2a TARGET_BUILD_VARIANT=eng \
+              build/soong/soong_ui.bash --dumpvar-mode TARGET_DEVICE \
+              > "$RUNNER_TEMP/aosp-product-probe.log" 2>&1
+            aosp_probe_status=$?
+            set -e
+            cat "$RUNNER_TEMP/aosp-product-probe.log"
+            echo "AOSP control parser exit status: $aosp_probe_status"
+            echo "Generated build logs after product parser failure:"
+            while IFS= read -r -d '' log_file; do
+              echo "--- $log_file ---"
+              tail -n 80 "$log_file"
+            done < <(find "$OUT_DIR" -maxdepth 4 -type f -iname '*.log' -print0)
+          fi
           echo "Available products:"
           set +e
           products=$(list_products)
@@ -100,6 +118,8 @@ jobs:
             "$OUT_DIR/.module_paths/AndroidProducts.mk.list" || true
           echo "Available releases for twrp_infiniti:"
           list_releases twrp_infiniti || true
+          echo "Available releases for aosp_arm64:"
+          list_releases aosp_arm64 || true
           lunch twrp_infiniti bp2a eng
           mka adbd recoveryimage
 
