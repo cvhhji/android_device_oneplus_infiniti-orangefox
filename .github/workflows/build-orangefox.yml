@@ -63,6 +63,11 @@ jobs:
           python3 "$GITHUB_WORKSPACE/tools/patch_update_engine_snapshot_api.py" \
             "$FOX_ROOT/system/update_engine/aosp/dynamic_partition_control_android.cc"
 
+      - name: Export fscrypt policy headers to OrangeFox GUI
+        run: |
+          python3 "$GITHUB_WORKSPACE/tools/patch_recovery_fscrypt_headers.py" \
+            "$FOX_ROOT"
+
       - name: Add temporary swap space for Soong
         run: |
           sudo fallocate -l 8G /swapfile-extra
