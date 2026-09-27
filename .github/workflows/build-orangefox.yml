@@ -61,8 +61,6 @@ jobs:
           export FOX_BUILD_TYPE=Alpha
           export FOX_BUILD_DEVICE=infiniti
           export ALLOW_MISSING_DEPENDENCIES=true
-          export OUT_DIR="$FOX_OUT"
-          source build/envsetup.sh
           export OUT_DIR="$FOX_ROOT/out"
           mkdir -p "$OUT_DIR/.module_paths"
           {
@@ -77,6 +75,19 @@ jobs:
             echo "infiniti AndroidProducts.mk was not added to the product inventory" >&2
             exit 1
           fi
+          source build/envsetup.sh
+          export OUT_DIR="$FOX_ROOT/out"
+          echo "Resolved source root: $(gettop)"
+          echo "Resolved output directory: $(getoutdir)"
+          echo "AndroidProducts.mk contents:"
+          cat device/oneplus/infiniti/AndroidProducts.mk
+          echo "Direct product parser probe for twrp_infiniti/bp2a/eng:"
+          set +e
+          TARGET_PRODUCT=twrp_infiniti TARGET_RELEASE=bp2a TARGET_BUILD_VARIANT=eng \
+            build/soong/soong_ui.bash --dumpvar-mode TARGET_DEVICE
+          product_probe_status=$?
+          set -e
+          echo "Direct product parser exit status: $product_probe_status"
           echo "Available products:"
           set +e
           products=$(list_products)
