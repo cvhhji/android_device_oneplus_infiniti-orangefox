@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Set device-specific splash and timezone defaults in OrangeFox fox_16.0."""
+"""Set device-specific splash, timezone, and clock defaults in OrangeFox fox_16.0."""
 
 from pathlib import Path
 import sys
@@ -145,6 +145,13 @@ def patch_timezone(recovery: Path) -> None:
         1,
         "default daylight-saving setting",
     )
+    text = replace_count(
+        text,
+        'mPersist.SetValue("tw_military_time", "0");',
+        'mPersist.SetValue("tw_military_time", "1");',
+        1,
+        "default 24-hour clock",
+    )
     data_cpp.write_text(text, encoding="utf-8", newline="\n")
 
     settings = recovery / "gui/theme/portrait_hdpi/pages/settings.xml"
@@ -174,7 +181,7 @@ def main() -> None:
     patch_timezone(recovery)
     print(
         "Applied Google Dark splash, dark logo, unchecked title defaults, "
-        "and DST-safe UTC+8 defaults."
+        "DST-safe UTC+8, and the 24-hour clock default."
     )
 
 

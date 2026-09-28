@@ -6,16 +6,20 @@ The available OrangeFox sync script currently builds from its `fox_16.0` source 
 
 ## GitHub Actions build
 
-Pushing to `fox_16.0` starts the cloud build. The workflow syncs OrangeFox sources, overlays this device tree, applies the splash and timezone defaults, patches MinUI's conditionally unused framebuffer argument, aligns update_engine with the SnapshotManager API in the synced source tree, declares the vold fscrypt header dependency for the OrangeFox GUI, defaults the unused OZIP key to an empty value, aligns the pre-decrypt keystore database sync call with the synced `system/vold` API, limits the 16 KiB prebuilt ELF-check exemption to MagiskBoot, and uploads the AVB-transplanted `recovery.img` as an Actions artifact. No local build is needed.
+Pushing to `fox_16.0` starts the cloud build. The workflow syncs OrangeFox sources, overlays this device tree, sets Simplified Chinese, Beijing time (UTC+8 without daylight saving), and the 24-hour clock as defaults, applies the splash defaults, patches MinUI's conditionally unused framebuffer argument, aligns update_engine with the SnapshotManager API in the synced source tree, declares the vold fscrypt header dependency for the OrangeFox GUI, defaults the unused OZIP key to an empty value, aligns the pre-decrypt keystore database sync call with the synced `system/vold` API, limits the 16 KiB prebuilt ELF-check exemption to MagiskBoot, and uploads the AVB-transplanted `recovery.img` as an Actions artifact. No local build is needed.
 
 The OnePlus SM8850 Canoe kernel build configuration uses 4 KiB pages. The workflow therefore exempts only the existing 4 KiB MagiskBoot prebuilt from the 16 KiB ELF check; it keeps the check enabled for the other prebuilts. If the recovery switches to a 16 KiB kernel, replace MagiskBoot with a 16 KiB-aligned binary instead of retaining this exemption. See the [OnePlus kernel build configuration](https://github.com/OnePlusOSS/android_kernel_oneplus_sm8850/blob/oneplus/sm8850_b_16.0.0_oneplus_15/build.config.msm.canoe).
 
-The splash defaults are Google Dark (`#202124`), the dark OrangeFox logo, and the “OrangeFox Recovery” text unchecked. The UTC+8 option uses standard time without a daylight-saving rule, and the “Use DST” setting starts unchecked, so Beijing time is not shifted one hour ahead.
+The splash defaults are Google Dark (`#202124`), the dark OrangeFox logo, and the “OrangeFox Recovery” text unchecked. The default zone is `TAIST-8;` (UTC+8 without a daylight-saving rule), the “Use DST” setting starts unchecked, and the clock uses 24-hour time, so Beijing time is not shifted one hour ahead.
+
+## Wi-Fi
+
+The WLAN kernel modules are loaded by OrangeFox's early vendor-module loader. Wi-Fi initialization waits for its `twrp.modules.loaded=true` event, signals the Qualcomm CNSS `fs_ready` node, waits for `wlan0`, and then starts `wpa_supplicant`. The former `TW_POST_DECRYPT_MODULES` list was not consumed by the synced OrangeFox recovery source, and the prior `post.decrypt.modules` trigger had no producer in this tree, leaving the Wi-Fi stack unloaded.
 
 ## AVB note
 
-The workflow reuses the 2,240-byte vbmeta block extracted from the supplied `recovery_fox.img`, then applies it to each new image with `tools/transplant_avb.sh`. This automates the fake-relock procedure you confirmed on the device. If the official recovery's AVB data changes after an OTA, replace `avb/recovery-vbmeta.bin` with the block from the new working image.
+The workflow reuses the 2,240-byte vbmeta block extracted from the supplied official `recovery.img`, then applies it to each new image with `tools/transplant_avb.sh`. The block is byte-identical to the one in the supplied older `recovery_fox.img`. If the official recovery's AVB data changes after an OTA, replace `avb/recovery-vbmeta.bin` with the block from the new official image.
 
 This reuses the existing signed block; it does not create a new OnePlus signature or recalculate its recovery descriptor. AOSP AVB descriptors bind vbmeta metadata to image data, so the resulting artifact should be understood as the tested fake-relock output, not as a newly OEM-signed image. See the [AVB hash descriptor definition](https://android.googlesource.com/platform/external/avb/+/refs/heads/main/libavb/avb_hash_descriptor.h).
 
-Successful compilation does not confirm boot, decryption, or touch behavior on the Android 17 device. Those require a recovery boot and on-device checks.
+Successful compilation does not confirm boot, decryption, touch, or Wi-Fi operation on the Android 17 device. Those require a recovery boot and on-device checks.
