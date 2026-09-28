@@ -22,7 +22,16 @@ PRODUCT_PACKAGES += \
     lpflash \
     lpmake \
     lpunpack \
-    fox_thermal_guard
+    fox_thermal_guard \
+    wpa_cli \
+    wpa_supplicant
+
+# AOSP builds the Qualcomm supplicant under vendor/bin/hw. Copy it into the
+# recovery ramdisk and expose wpa_cli at /system/bin for OrangeFox's WLAN tools.
+TW_RECOVERY_ADDITIONAL_RELINK_BINARY_FILES += \
+    $(TARGET_OUT_VENDOR_EXECUTABLES)/wpa_cli
+TW_RECOVERY_ADDITIONAL_RELINK_VENDOR_HW_BINARY_FILES += \
+    $(TARGET_OUT_VENDOR_EXECUTABLES)/hw/wpa_supplicant
 
 # OTA certs
 PRODUCT_EXTRA_RECOVERY_KEYS += \

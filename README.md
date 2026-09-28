@@ -14,7 +14,7 @@ The splash defaults are Google Dark (`#202124`), the dark OrangeFox logo, and th
 
 ## Wi-Fi
 
-The WLAN kernel modules are loaded by OrangeFox's early vendor-module loader. Wi-Fi initialization waits for its `twrp.modules.loaded=true` event, signals the Qualcomm CNSS `fs_ready` node, waits for `wlan0`, and then starts `wpa_supplicant`. The former `TW_POST_DECRYPT_MODULES` list was not consumed by the synced OrangeFox recovery source, and the prior `post.decrypt.modules` trigger had no producer in this tree, leaving the Wi-Fi stack unloaded.
+The WLAN kernel modules are loaded by OrangeFox's early vendor-module loader. Wi-Fi initialization waits for its `twrp.modules.loaded=true` event, signals the Qualcomm CNSS `fs_ready` node, waits for `wlan0`, and then starts the packaged `wpa_supplicant` from `/vendor/bin/hw`; `wpa_cli` is placed in `/system/bin` for OrangeFox's WLAN tools. The former `TW_POST_DECRYPT_MODULES` list was not consumed by the synced OrangeFox recovery source, and the prior `post.decrypt.modules` trigger had no producer in this tree. The Actions artifact must contain both executables before claiming the recovery's Wi-Fi stack is packaged correctly.
 
 ## AVB note
 
