@@ -1,0 +1,94 @@
+#!/system/bin/sh
+
+PATH=/system/bin:/sbin:/vendor/bin:$PATH
+export PATH
+
+WLAN_IFACE=/sys/class/net/wlan0
+SOCKET_DIR=/tmp/recovery/sockets
+FS_READY=/sys/bus/platform/drivers/cnss2/b0000000.qcom,cnss-peach/fs_ready
+
+has_module_files() {
+    for module_file in "$1"/*.ko; do
+        if [ -f "$module_file" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+
+mkdir -p "$SOCKET_DIR" /tmp/wlan/list
+
+if [ -e "$WLAN_IFACE" ] && /system/bin/wpa_cli -i wlan0 -p "$SOCKET_DIR" ping 2>/dev/null | grep -q PONG; then
+    echo "Wi-Fi is already running."
+    exit 0
+fi
+
+echo "Starting Qualcomm Wi-Fi on request..."
+
+set --
+for module_dir in /vendor/lib/modules /vendor/lib/modules/1.1 /vendor_dlkm/lib/modules; do
+    if [ -s "$module_dir/modules.dep" ] || has_module_files "$module_dir"; then
+        set -- "$@" -d "$module_dir"
+    fi
+done
+
+if [ "$#" -eq 0 ]; then
+    echo "No Qualcomm WLAN modules were found. Check that vendor and vendor_dlkm are mounted."
+    exit 1
+fi
+
+setprop wifi.driver.ready false
+set -- "$@" \
+    smem_mailbox \
+    cnss_prealloc \
+    cnss_utils \
+    cnss_plat_ipc_qmi_svc \
+    cnss_nl \
+    wlan_firmware_service \
+    cnss2 \
+    rfkill \
+    cfg80211 \
+    gsim \
+    rmnet_mem \
+    ipam \
+    qca_cld3_peach_v2
+
+if ! /system/bin/modprobe "$@"; then
+    echo "One or more module requests failed; checking whether wlan0 can still start."
+fi
+
+if [ -e "$FS_READY" ]; then
+    if ! chmod 222 "$FS_READY" || ! echo 1 > "$FS_READY"; then
+        echo "Unable to signal CNSS fs_ready."
+        exit 1
+    fi
+else
+    echo "CNSS fs_ready node is missing; continuing to wait for wlan0."
+fi
+
+echo "Waiting for wlan0..."
+attempt=0
+while [ ! -e "$WLAN_IFACE" ] && [ "$attempt" -lt 60 ]; do
+    sleep 1
+    attempt=$((attempt + 1))
+done
+
+if [ ! -e "$WLAN_IFACE" ]; then
+    echo "The WLAN driver loaded, but wlan0 did not appear."
+    exit 1
+fi
+
+setprop wifi.driver.ready true
+echo "Waiting for wpa_supplicant..."
+attempt=0
+while [ "$attempt" -lt 20 ]; do
+    if /system/bin/wpa_cli -i wlan0 -p "$SOCKET_DIR" ping 2>/dev/null | grep -q PONG; then
+        echo "Wi-Fi is ready. Select Scan to list networks."
+        exit 0
+    fi
+    sleep 1
+    attempt=$((attempt + 1))
+done
+
+echo "wlan0 is ready, but wpa_supplicant did not respond."
+exit 1

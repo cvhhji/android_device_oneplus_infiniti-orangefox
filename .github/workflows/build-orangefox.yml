@@ -52,6 +52,8 @@ jobs:
             "$GITHUB_WORKSPACE/" "$FOX_ROOT/device/oneplus/infiniti/"
           python3 "$GITHUB_WORKSPACE/tools/patch_orangefox_splash.py" \
             "$FOX_ROOT/bootable/recovery"
+          python3 "$GITHUB_WORKSPACE/tools/patch_orangefox_wifi.py" \
+            "$FOX_ROOT/bootable/recovery/gui/theme/portrait_hdpi/pages/wlan.xml"
 
       - name: Patch MinUI warning for Android 17
         run: |

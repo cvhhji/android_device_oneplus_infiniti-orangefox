@@ -22,7 +22,15 @@ PRODUCT_PACKAGES += \
     lpflash \
     lpmake \
     lpunpack \
-    fox_thermal_guard
+    fox_thermal_guard \
+    wpa_cli \
+    wpa_supplicant
+
+# Package the Wi-Fi control client and vendor supplicant in the recovery ramdisk.
+TW_RECOVERY_ADDITIONAL_RELINK_BINARY_FILES += \
+    $(TARGET_OUT_VENDOR_EXECUTABLES)/wpa_cli
+TW_RECOVERY_ADDITIONAL_RELINK_VENDOR_HW_BINARY_FILES += \
+    $(TARGET_OUT_VENDOR_EXECUTABLES)/hw/wpa_supplicant
 
 # OTA certs
 PRODUCT_EXTRA_RECOVERY_KEYS += \
