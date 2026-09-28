@@ -78,6 +78,11 @@ jobs:
           python3 "$GITHUB_WORKSPACE/tools/patch_recovery_keystore_sync.py" \
             "$FOX_ROOT"
 
+      - name: Keep the 4 KiB MagiskBoot prebuilt check device-specific
+        run: |
+          python3 "$GITHUB_WORKSPACE/tools/patch_magiskboot_page_size_check.py" \
+            "$FOX_ROOT"
+
       - name: Add temporary swap space for Soong
         run: |
           sudo fallocate -l 8G /swapfile-extra

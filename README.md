@@ -6,7 +6,9 @@ The available OrangeFox sync script currently builds from its `fox_16.0` source 
 
 ## GitHub Actions build
 
-Pushing to `fox_16.0` starts the cloud build. The workflow syncs OrangeFox sources, overlays this device tree, applies the splash and timezone defaults, patches MinUI's conditionally unused framebuffer argument, aligns update_engine with the SnapshotManager API in the synced source tree, declares the vold fscrypt header dependency for the OrangeFox GUI, defaults the unused OZIP key to an empty value, aligns the pre-decrypt keystore database sync call with the synced `system/vold` API, and uploads the AVB-transplanted `recovery.img` as an Actions artifact. No local build is needed.
+Pushing to `fox_16.0` starts the cloud build. The workflow syncs OrangeFox sources, overlays this device tree, applies the splash and timezone defaults, patches MinUI's conditionally unused framebuffer argument, aligns update_engine with the SnapshotManager API in the synced source tree, declares the vold fscrypt header dependency for the OrangeFox GUI, defaults the unused OZIP key to an empty value, aligns the pre-decrypt keystore database sync call with the synced `system/vold` API, limits the 16 KiB prebuilt ELF-check exemption to MagiskBoot, and uploads the AVB-transplanted `recovery.img` as an Actions artifact. No local build is needed.
+
+The OnePlus SM8850 Canoe kernel build configuration uses 4 KiB pages. The workflow therefore exempts only the existing 4 KiB MagiskBoot prebuilt from the 16 KiB ELF check; it keeps the check enabled for the other prebuilts. If the recovery switches to a 16 KiB kernel, replace MagiskBoot with a 16 KiB-aligned binary instead of retaining this exemption. See the [OnePlus kernel build configuration](https://github.com/OnePlusOSS/android_kernel_oneplus_sm8850/blob/oneplus/sm8850_b_16.0.0_oneplus_15/build.config.msm.canoe).
 
 The splash defaults are Google Dark (`#202124`), the dark OrangeFox logo, and the “OrangeFox Recovery” text unchecked. The UTC+8 option uses standard time without a daylight-saving rule, and the “Use DST” setting starts unchecked, so Beijing time is not shifted one hour ahead.
 
