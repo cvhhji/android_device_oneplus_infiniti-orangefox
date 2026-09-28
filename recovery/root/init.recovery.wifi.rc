@@ -1,4 +1,4 @@
-on property:twrp.modules.loaded=true
+on property:post.decrypt.modules=true
     setprop sys.fox.wlan.up 0
     chmod 222 /sys/bus/platform/drivers/cnss2/b0000000.qcom,cnss-peach/fs_ready
     write /sys/bus/platform/drivers/cnss2/b0000000.qcom,cnss-peach/fs_ready 1

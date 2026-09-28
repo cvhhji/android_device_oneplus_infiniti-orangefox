@@ -12,10 +12,6 @@ The OnePlus SM8850 Canoe kernel build configuration uses 4 KiB pages. The workfl
 
 The splash defaults are Google Dark (`#202124`), the dark OrangeFox logo, and the “OrangeFox Recovery” text unchecked. The default zone is `TAIST-8;` (UTC+8 without a daylight-saving rule), the “Use DST” setting starts unchecked, and the clock uses 24-hour time, so Beijing time is not shifted one hour ahead.
 
-## Wi-Fi
-
-The WLAN kernel modules are loaded by OrangeFox's early vendor-module loader. Wi-Fi initialization waits for its `twrp.modules.loaded=true` event, signals the Qualcomm CNSS `fs_ready` node, waits for `wlan0`, and then starts `wpa_supplicant`. The former `TW_POST_DECRYPT_MODULES` list was not consumed by the synced OrangeFox recovery source, and the prior `post.decrypt.modules` trigger had no producer in this tree, leaving the Wi-Fi stack unloaded.
-
 ## AVB note
 
 The workflow reuses the 2,240-byte vbmeta block extracted from the supplied official `recovery.img`, then applies it to each new image with `tools/transplant_avb.sh`. The block is byte-identical to the one in the supplied older `recovery_fox.img`. If the official recovery's AVB data changes after an OTA, replace `avb/recovery-vbmeta.bin` with the block from the new official image.
