@@ -143,8 +143,8 @@ def patch_timezone(recovery: Path) -> None:
         '\tstring TZ = GetStrValue(TW_TIME_ZONE_VAR);\n'
         '\tsetenv("TZ", TZ.c_str(), 1);\n',
         '\tstring TZ = GetStrValue(TW_TIME_ZONE_VAR);\n'
-        '\t// Migrate legacy UTC+8 values that enabled Taiwan daylight saving time.\n'
-        '\tif (TZ == "TAIST-8;" || TZ == "TAIST-8TAIDT") {\n'
+        '\t// Normalize saved UTC+8 values, including legacy daylight-saving variants.\n'
+        '\tif (TZ.rfind("TAIST-8", 0) == 0) {\n'
         '\t\tTZ = "TAIST-8";\n'
         '\t\tSetValue(TW_TIME_ZONE_VAR, TZ);\n'
         '\t\tSetValue(TW_TIME_ZONE_GUISEL, "TAIST-8;");\n'
