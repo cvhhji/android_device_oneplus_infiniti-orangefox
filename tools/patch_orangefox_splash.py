@@ -140,10 +140,33 @@ def patch_timezone(recovery: Path) -> None:
     text = data_cpp.read_text(encoding="utf-8")
     text = replace_count(
         text,
+        '\tstring TZ = GetStrValue(TW_TIME_ZONE_VAR);\n'
+        '\tsetenv("TZ", TZ.c_str(), 1);\n',
+        '\tstring TZ = GetStrValue(TW_TIME_ZONE_VAR);\n'
+        '\t// Migrate legacy UTC+8 values that enabled Taiwan daylight saving time.\n'
+        '\tif (TZ == "TAIST-8;" || TZ == "TAIST-8TAIDT") {\n'
+        '\t\tTZ = "TAIST-8";\n'
+        '\t\tSetValue(TW_TIME_ZONE_VAR, TZ);\n'
+        '\t\tSetValue(TW_TIME_ZONE_GUISEL, "TAIST-8;");\n'
+        '\t\tSetValue(TW_TIME_ZONE_GUIDST, "0");\n'
+        '\t}\n'
+        '\tsetenv("TZ", TZ.c_str(), 1);\n',
+        1,
+        "legacy UTC+8 timezone migration",
+    )
+    text = replace_count(
+        text,
         'mPersist.SetValue(TW_TIME_ZONE_GUIDST, "1");',
         'mPersist.SetValue(TW_TIME_ZONE_GUIDST, "0");',
         1,
         "default daylight-saving setting",
+    )
+    text = replace_count(
+        text,
+        '  mPersist.SetValue(TW_TIME_ZONE_GUISEL, OF_DEFAULT_TIMEZONE);',
+        '  mPersist.SetValue(TW_TIME_ZONE_GUISEL, "TAIST-8;");',
+        1,
+        "default timezone selector value",
     )
     text = replace_count(
         text,
@@ -181,7 +204,8 @@ def main() -> None:
     patch_timezone(recovery)
     print(
         "Applied Google Dark splash, dark logo, unchecked title defaults, "
-        "DST-safe UTC+8, and the 24-hour clock default."
+        "a DST-free UTC+8 default and legacy timezone migration, "
+        "and the 24-hour clock default."
     )
 
 

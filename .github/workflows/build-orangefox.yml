@@ -102,7 +102,7 @@ jobs:
           export FOX_MAINTAINER_PATCH_VERSION=1
           export FOX_BUILD_TYPE=Alpha
           export FOX_BUILD_DEVICE=infiniti
-          export OF_DEFAULT_TIMEZONE='TAIST-8;'
+          export OF_DEFAULT_TIMEZONE='TAIST-8'
           export ALLOW_MISSING_DEPENDENCIES=true
           export OUT_DIR="$FOX_ROOT/out"
           allowlist_file=vendor/google/build/androidmk/allowlist.txt

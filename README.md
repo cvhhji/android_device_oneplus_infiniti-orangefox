@@ -10,11 +10,11 @@ Pushing to `fox_16.0` starts the cloud build. The workflow syncs OrangeFox sourc
 
 The OnePlus SM8850 Canoe kernel build configuration uses 4 KiB pages. The workflow therefore exempts only the existing 4 KiB MagiskBoot prebuilt from the 16 KiB ELF check; it keeps the check enabled for the other prebuilts. If the recovery switches to a 16 KiB kernel, replace MagiskBoot with a 16 KiB-aligned binary instead of retaining this exemption. See the [OnePlus kernel build configuration](https://github.com/OnePlusOSS/android_kernel_oneplus_sm8850/blob/oneplus/sm8850_b_16.0.0_oneplus_15/build.config.msm.canoe).
 
-The splash defaults are Google Dark (`#202124`), the dark OrangeFox logo, and the “OrangeFox Recovery” text unchecked. The default zone is `TAIST-8;` (UTC+8 without a daylight-saving rule), the “Use DST” setting starts unchecked, and the clock uses 24-hour time, so Beijing time is not shifted one hour ahead.
+The splash defaults are Google Dark (`#202124`), the dark OrangeFox logo, and the “OrangeFox Recovery” text unchecked. The clock defaults to POSIX timezone `TAIST-8` (UTC+8, no daylight saving), while the selector uses `TAIST-8;`; legacy saved values that enabled daylight saving are migrated to Beijing time. The “Use DST” setting starts unchecked, and the clock uses 24-hour time.
 
 ## Wi-Fi
 
-The existing “Start WLAN” menu entry now mounts `/vendor` and `/vendor_dlkm` through OrangeFox, then calls a device-tree script to load the Qualcomm WLAN modules, signal CNSS `fs_ready`, wait for `wlan0`, and start `wpa_supplicant`. Wi-Fi modules remain out of `TW_LOAD_VENDOR_MODULES`, and the existing `post.decrypt.modules=true` init trigger is retained so recovery startup does not load WLAN drivers early.
+The existing “Start WLAN” menu entry now mounts `/vendor` and `/vendor_dlkm` through OrangeFox, then calls a device-tree script to load the Qualcomm WLAN modules, signal CNSS `fs_ready`, wait for `wlan0`, bring the interface up, and start `wpa_supplicant`. Module loading is verbose for recovery-terminal diagnostics. Wi-Fi modules remain out of `TW_LOAD_VENDOR_MODULES`, and the existing `post.decrypt.modules=true` init trigger is retained so recovery startup does not load WLAN drivers early.
 
 ## AVB note
 

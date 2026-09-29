@@ -53,7 +53,7 @@ set -- "$@" \
     ipam \
     qca_cld3_peach_v2
 
-if ! /system/bin/modprobe "$@"; then
+if ! /system/bin/modprobe -v "$@"; then
     echo "One or more module requests failed; checking whether wlan0 can still start."
 fi
 
@@ -78,6 +78,11 @@ if [ ! -e "$WLAN_IFACE" ]; then
     exit 1
 fi
 
+if ! /system/bin/ifconfig wlan0 up; then
+    echo "wlan0 exists, but the interface could not be brought up."
+    exit 1
+fi
+
 setprop wifi.driver.ready true
 echo "Waiting for wpa_supplicant..."
 attempt=0
@@ -91,4 +96,6 @@ while [ "$attempt" -lt 20 ]; do
 done
 
 echo "wlan0 is ready, but wpa_supplicant did not respond."
+echo "wifi.driver.ready: $(getprop wifi.driver.ready)"
+echo "wpa_supplicant service: $(getprop init.svc.wpa_supplicant)"
 exit 1
